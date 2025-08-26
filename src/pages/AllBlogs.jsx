@@ -40,7 +40,7 @@ const AllBlogs = function () {
       <section>
         {isLoading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="animate-spin rounded-full mt-20 h-20 w-20 border-b-2 border-amber-600 mx-auto"></div>
           </div>
         ) : blogs.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -53,7 +53,7 @@ const AllBlogs = function () {
             <p className="text-gray-500 mb-4">No blogs available yet.</p>
             <Link
               to="/add-blog"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="bg-amber-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-amber-700 transition-colors"
             >
               Write the First Blog
             </Link>

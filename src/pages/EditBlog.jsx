@@ -1,39 +1,52 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useLocation, useParams } from "react-router";
 import axios from "axios";
 import { SquarePen } from "lucide-react";
 import { toast } from "react-toastify";
 
-const EditBlog = () => {
+const EditBlog = function () {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [author, setAuthor] = useState("");
   const [tags, setTags] = useState("");
+  const [password, setPassword] = useState("");
+  const [existingPassword, setExistingPassword] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
-  const navigate = useNavigate();
 
+  // Pre-fill form with blog data including password
   useEffect(() => {
-    async function fetchBlog() {
-      try {
-        setIsFetching(true);
-        const res = await axios.get(
-          `https://blogapp-backend-vx02.onrender.com/api/v1/blogs/${id}`
-        );
-        const blog = res.data;
-        setTitle(blog.title);
-        setContent(blog.content);
-        setAuthor(blog.author);
-        setTags(blog.tags.join(", "));
-      } catch (error) {
-        toast.error("Failed to load blog data.");
-      } finally {
-        setIsFetching(false);
+    if (location.state?.blog) {
+      const blog = location.state.blog;
+      setTitle(blog.title);
+      setContent(blog.content);
+      setAuthor(blog.author);
+      setTags(blog.tags.join(", "));
+      setExistingPassword(blog.password || null);
+      setPassword(""); // Clear password input field for new pwd entry
+    } else {
+      async function fetchBlog() {
+        try {
+          const response = await axios.get(
+            `https://blogapp-backend-vx02.onrender.com/api/v1/blogs/${id}?includePassword=true`
+          );
+          const blog = response.data;
+          setTitle(blog.title);
+          setContent(blog.content);
+          setAuthor(blog.author);
+          setTags(blog.tags.join(", "));
+          setExistingPassword(blog.password || null);
+          setPassword(""); // Clear password input field for new pwd entry
+        } catch (error) {
+          toast.error("Error loading blog data");
+          navigate("/blogs");
+        }
       }
+      fetchBlog();
     }
-    fetchBlog();
-  }, [id]);
+  }, [id, location.state, navigate]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -46,6 +59,8 @@ const EditBlog = () => {
         .split(",")
         .map((tag) => tag.trim())
         .filter((tag) => tag !== ""),
+      // If user inputs a new password, send it, else keep existing password for validation
+      password: password.trim() === "" ? existingPassword : password.trim(),
     };
 
     try {
@@ -55,22 +70,13 @@ const EditBlog = () => {
         updatedBlog
       );
       toast.success("Blog updated successfully!");
-      navigate("/blogs");
+      navigate(`/blog/${id}`);
     } catch (error) {
+      console.log(error);
       toast.error("Error updating blog. Please try again.");
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
-  }
-
-  if (isFetching) {
-    return (
-      <main className="max-w-2xl mx-auto text-center py-20 text-gray-600">
-        Loading blog data...
-        <div className="animate-spin rounded-full mt-40 h-20 w-20 border-b-2 border-amber-600 mx-auto"></div>
-      </main>
-    );
   }
 
   return (
@@ -82,6 +88,7 @@ const EditBlog = () => {
         onSubmit={handleSubmit}
         className="bg-white rounded-lg shadow-md p-6"
       >
+        {/* Title */}
         <div className="mb-6">
           <label
             htmlFor="title"
@@ -94,13 +101,14 @@ const EditBlog = () => {
             id="title"
             name="title"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2
-             focus:ring-blue-200 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-transparent"
             placeholder="Enter your Blog Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
+
+        {/* Author */}
         <div className="mb-6">
           <label
             htmlFor="author"
@@ -113,13 +121,14 @@ const EditBlog = () => {
             id="author"
             name="author"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2
-             focus:ring-blue-200 focus:border-transparent"
-            placeholder="Your name (optional)"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-transparent"
+            placeholder="Your name"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
           />
         </div>
+
+        {/* Content */}
         <div className="mb-6">
           <label
             htmlFor="content"
@@ -132,14 +141,14 @@ const EditBlog = () => {
             name="content"
             required
             rows={12}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2
-             focus:ring-blue-200 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-transparent"
             placeholder="Write your Blog Content here....."
             value={content}
             onChange={(e) => setContent(e.target.value)}
           ></textarea>
         </div>
 
+        {/* Tags */}
         <div className="mb-6">
           <label
             htmlFor="tags"
@@ -152,14 +161,36 @@ const EditBlog = () => {
             id="tags"
             name="tags"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2
-             focus:ring-blue-200 focus:border-transparent"
-            placeholder="Enter tags separated by commas (e.g., technology, react, programming)"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-transparent"
+            placeholder="Enter tags separated by commas (e.g., tech, react)"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
           />
         </div>
 
+        {/* Password */}
+        <div className="mb-6">
+          <label
+            htmlFor="password"
+            className="block text-base font-medium text-gray-700 mb-2"
+          >
+            New Password (optional)
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-transparent"
+            placeholder="Set or change password to protect this blog"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <small className="text-sm text-gray-500">
+            [Current PWD: {existingPassword || "None"}]
+          </small>
+        </div>
+
+        {/* Submit */}
         <div className="text-center">
           <button
             type="submit"

@@ -1,13 +1,21 @@
-import { BrowserRouter, Routes, Route, Link, useParams } from "react-router";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  useParams,
+} from "react-router-dom"; // Corrected the import
 import HomePage from "./pages/Home";
 import AboutPage from "./pages/About";
 import AllBlogs from "./pages/AllBlogs";
-import AddBlogs from "./pages//AddBlog";
+import AddBlogs from "./pages/AddBlog";
 import SingleBlog from "./pages/SingleBlog";
 import EditBlog from "./pages/EditBlog";
 import { ToastContainer } from "react-toastify";
 
+
 import Navbar from "./components/Navbar";
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -26,9 +34,7 @@ const App = () => {
         <ToastContainer />
       </div>
     </BrowserRouter>
-    // <div className="bg-red-400 py-10 text-center text-white text-4xl text-shadow-amber-300">
-    //   App
-    // </div>
   );
 };
+
 export default App;
